@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lock Draw</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
+
+      :root {
+        --bg: #f4efe7;
+        --bg-deep: #e7dfd2;
+        --panel: rgba(255, 252, 247, 0.7);
+        --panel-strong: rgba(255, 249, 242, 0.9);
+        --ink: #2f2b2a;
+        --muted: #756a63;
+        --sage: #7e8f7c;
+        --sage-deep: #5d7160;
+        --rose: #c38d7d;
+        --gold: #d7b98c;
+        --line: rgba(74, 58, 52, 0.12);
+        --shadow: 0 18px 40px rgba(87, 72, 66, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top left, rgba(255,255,255,0.7), transparent 30%),
+          linear-gradient(135deg, var(--bg) 0%, var(--bg-deep) 100%);
+        color: var(--ink);
+        font-family: 'Noto Sans KR', 'Microsoft JhengHei', sans-serif;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 32px 20px;
+      }
+
+      .page-shell {
+        width: min(1100px, 100%);
+        background: rgba(255, 250, 244, 0.45);
+        border: 1px solid rgba(94, 76, 65, 0.12);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .page-shell::before,
+      .page-shell::after {
+        content: "";
+        position: absolute;
+        inset: 18px;
+        border: 1px solid rgba(90, 74, 67, 0.12);
+        pointer-events: none;
+      }
+
+      .page-shell::after {
+        inset: auto 26px 26px auto;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: 1px solid rgba(170, 140, 110, 0.18);
+        background: rgba(255,255,255,0.15);
+      }
+
+      .container {
+        position: relative;
+        z-index: 1;
+        padding: 42px 42px 28px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: clamp(2.2rem, 4vw, 3rem);
+        letter-spacing: 0.08em;
+        font-weight: 600;
+      }
+
+      .brand small {
+        color: var(--muted);
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+      }
+
+      .status-badge {
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(94, 80, 74, 0.16);
+        background: rgba(255, 255, 255, 0.25);
+        color: var(--muted);
+        font-size: 0.76rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .app-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 0.9fr;
+        gap: 28px;
+        padding-top: 28px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid rgba(92, 78, 69, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+        padding: 22px 20px;
+      }
+
+      .panel h3 {
+        margin: 0 0 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 260px;
+        resize: vertical;
+        border: 1px solid rgba(90, 73, 64, 0.15);
+        background: rgba(255,255,255,0.22);
+        color: var(--ink);
+        padding: 16px 18px;
+        font-size: 0.98rem;
+        line-height: 1.8;
+        outline: none;
+        border-radius: 12px;
+      }
+
+      textarea:focus {
+        border-color: rgba(93, 113, 96, 0.55);
+        box-shadow: 0 0 0 4px rgba(126, 143, 124, 0.1);
+      }
+
+      .action-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font-size: 0.84rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .outline-btn {
+        background: rgba(255,255,255,0.38);
+        color: var(--ink);
+        border: 1px solid rgba(92, 77, 70, 0.15);
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, var(--sage-deep), var(--sage));
+        color: #f8faf7;
+        box-shadow: 0 10px 18px rgba(93, 113, 96, 0.18);
+      }
+
+      .secondary-btn {
+        background: linear-gradient(135deg, #d7b98c, #c38d7d);
+        color: #fffaf4;
+        box-shadow: 0 10px 18px rgba(195, 141, 125, 0.18);
+      }
+
+      .draw-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 20px;
+        background: var(--panel-strong);
+      }
+
+      .winner-box {
+        min-height: 220px;
+        border: 1px solid rgba(87, 72, 66, 0.12);
+        background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(245, 238, 230, 0.44));
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+      }
+
+      .winner-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .winner-name {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: clamp(2.5rem, 4vw, 4rem);
+        line-height: 1;
+        margin-top: 18px;
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ink);
+      }
+
+      .winner-meta {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .draw-action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .draw-action-row button {
+        flex: 1;
+      }
+
+      .chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        min-height: 160px;
+        padding-top: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(80, 67, 60, 0.12);
+        background: rgba(255,255,255,0.28);
+        color: var(--ink);
+        font-size: 0.82rem;
+      }
+
+      .chip.empty {
+        color: var(--muted);
+        border-style: dashed;
+        background: rgba(255,255,255,0.12);
+      }
+
+      .slot-text {
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .animate-pop {
+        animation: pop 0.7s ease;
+      }
+
+      @keyframes pop {
+        0% { transform: scale(0.8); opacity: 0.4; }
+        60% { transform: scale(1.06); opacity: 1; }
+        100% { transform: scale(1); }
+      }
+
+      @media (max-width: 900px) {
+        .app-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .container {
+          padding: 26px 20px 24px;
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="container">
+        <header class="topbar">
+          <div class="brand">
+            <div class="brand-mark">Lock Draw</div>
+            <small>오늘의 선택</small>
+          </div>
+          <div class="status-badge">文青抽籤</div>
+        </header>
+
+        <main class="app-grid">
+          <section class="panel">
+            <h3>參與名單</h3>
+            <textarea id="namesInput" aria-label="參與名單">李明
+朴智恩
+金海娜
+鄭燦
+徐雅琳
+吳俊宇
+宋佳穎
+林宥辰
+陳怡安
+周宇軒
+高敏英
+張元凱</textarea>
+            <div class="action-row">
+              <button id="sampleBtn" class="outline-btn" type="button">範例名單</button>
+              <button id="clearBtn" class="outline-btn" type="button">清空</button>
+            </div>
+          </section>
+
+          <section class="panel draw-panel">
+            <div class="winner-box">
+              <div class="winner-label">本次得主</div>
+              <div id="winnerName" class="winner-name">等待抽籤</div>
+              <div id="winnerMeta" class="winner-meta">共 0 位參與者</div>
+            </div>
+
+            <div class="draw-action-row">
+              <button id="drawBtn" class="primary-btn" type="button">開始抽籤</button>
+              <button id="againBtn" class="secondary-btn" type="button">再抽一次</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>候選名單</h3>
+            <div class="slot-text">剩餘人選</div>
+            <div id="participantList" class="chip-list"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const namesInput = document.getElementById('namesInput');
+      const participantList = document.getElementById('participantList');
+      const winnerName = document.getElementById('winnerName');
+      const winnerMeta = document.getElementById('winnerMeta');
+      const drawBtn = document.getElementById('drawBtn');
+      const againBtn = document.getElementById('againBtn');
+      const sampleBtn = document.getElementById('sampleBtn');
+      const clearBtn = document.getElementById('clearBtn');
+
+      let pool = [];
+      let winners = [];
+
+      function parseNames(raw) {
+        return [...new Set(
+          raw
+            .split(/\n|,|，|；|\s+/)
+            .map((name) => name.trim())
+            .filter(Boolean)
+        )];
+      }
+
+      function renderParticipants() {
+        const names = [...pool];
+        participantList.innerHTML = '';
+
+        if (!names.length) {
+          const emptyChip = document.createElement('div');
+          emptyChip.className = 'chip empty';
+          emptyChip.textContent = '候選名單空白';
+          participantList.appendChild(emptyChip);
+          return;
+        }
+
+        names.forEach((name) => {
+          const chip = document.createElement('div');
+          chip.className = 'chip';
+          chip.textContent = name;
+          participantList.appendChild(chip);
+        });
+      }
+
+      function syncPoolFromInput() {
+        const names = parseNames(namesInput.value);
+        pool = names.slice();
+        winners = [];
+        renderParticipants();
+        winnerName.textContent = '等待抽籤';
+        winnerMeta.textContent = `共 ${pool.length} 位參與者`;
+      }
+
+      function drawOne() {
+        if (!pool.length) {
+          winnerName.textContent = '無名額可抽';
+          winnerMeta.textContent = '請先輸入參與者';
+          return;
+        }
+
+        const index = Math.floor(Math.random() * pool.length);
+        const selected = pool[index];
+        pool.splice(index, 1);
+        winners.push(selected);
+
+        winnerName.textContent = selected;
+        winnerName.classList.remove('animate-pop');
+        void winnerName.offsetWidth;
+        winnerName.classList.add('animate-pop');
+
+        winnerMeta.textContent = `已抽出 1 名，剩餘 ${pool.length} 位`;
+        renderParticipants();
+      }
+
+      function loadSample() {
+        namesInput.value = '李明\n朴智恩\n金海娜\n鄭燦\n徐雅琳\n吳俊宇\n宋佳穎\n林宥辰\n陳怡安\n周宇軒\n高敏英\n張元凱';
+        syncPoolFromInput();
+      }
+
+      drawBtn.addEventListener('click', drawOne);
+      againBtn.addEventListener('click', () => {
+        if (!pool.length) {
+          syncPoolFromInput();
+        }
+        drawOne();
+      });
+      sampleBtn.addEventListener('click', loadSample);
+      clearBtn.addEventListener('click', () => {
+        namesInput.value = '';
+        syncPoolFromInput();
+      });
+      namesInput.addEventListener('input', syncPoolFromInput);
+
+      syncPoolFromInput();
+    </script>
+  </body>
+</html>
